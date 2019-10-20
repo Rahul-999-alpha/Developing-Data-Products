@@ -1,0 +1,92 @@
+---
+title: "Developing Data Products Week 4 Project"
+author: "Rahul Daswani"
+date: "20 October 2019"
+output: 
+ioslides_presentation: default
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Overview
+
+This is an RStudio shiny application developed as a part of final project in the Developing Data Products course in Coursera Data Science Specialization track. 
+
+The goal of the project was to create a simple Body Mass Index (BMI) Calculator.
+
+The BMI is an attempt to quantify the amount of tissue mass (muscle, fat, and bone) in an individual, and then categorize that person as underweight, normal weight, overweight, or obese based on that value.
+
+Mass should be in kg, height in m. Your mass and height should be provided as input by two sliders.
+ 
+- The server.R and ui.R codes are posted on github at: <https://github.com/Rahul-999-alpha/Developing-Data-Products>
+- The App can be found at: <https://rahul999.shinyapps.io/Developing-Data-Products/>
+
+
+## R Code for the Application
+
+```{r, echo = TRUE, warning=FALSE}
+# Ui.R code
+library(shiny)
+shinyUI(fluidPage(
+  titlePanel("Body Mass Index (BMI) Calculator"),
+  sidebarLayout(sidebarPanel(
+    helpText("The body mass index (BMI) calculator. Please, input your mass and height."),
+    sliderInput(
+        inputId = "height",
+        label = strong("Your height in cm:"),
+        min = 100,
+        max = 240,
+        value = 170
+    ), #User height input slider
+    sliderInput(
+      inputId = "mass",
+      label = strong("Your weight in kg:"),
+      min = 20,
+      max = 140,
+      value = 60
+    ), #User mass input slider
+    h5("The BMI is an attempt to quantify the amount of tissue mass (muscle, fat, and bone) in an individual, and then categorize that person as underweight, normal weight, overweight, or obese based on that value.")
+    ),
+                
+    mainPanel(
+      uiOutput("user_data"), #Text with the user data
+      plotOutput("plot", height = "175px", width = "100%"), #Colorful plot of the user BMI
+      uiOutput("results") #Text results
+    ))
+))
+# Server.R code
+library(shiny)
+dat<-matrix(c(15, 1, 2.5 ,6.5 , 5, 5, 5), ncol = 1, nrow = 7)
+shinyServer(function(input, output) {
+  output$user_data <- renderText({
+    
+    paste0("<strong>","Your mass is ", input$mass, " kg and your height is ", input$height, " cm", "</strong>")
+  })
+  
+  output$results <- renderText({
+    bmi = round(input$mass/(input$height/100)^2, 1)
+    if      (bmi <  15.0) cond = "<span style='color: red'>Very severely underweight</span>"
+    else if (bmi <= 16.0) cond = "<span style='color: red'>Severely underweight</span>"
+    else if (bmi <= 18.5) cond = "<span style='color: orange'>Underweight</span>"
+    else if (bmi <= 25.0) cond = "<span style='color: green'>Normal</span>"
+    else if (bmi <= 30.0) cond = "<span style='color: orange'>Overweight</span>"
+    else if (bmi <= 35.0) cond = "<span style='color: red'>Obese Class I (Moderately obese)</span>"
+    else if (bmi <= 40.0) cond = "<span style='color: red'>Obese Class II (Severely obese)</span>"
+    else                  cond = "<span style='color: red'>Obese Class III (Very severely obese)</span>"
+    paste0("Your BMI is ", "<strong>", bmi, "</strong>","<br>", " It is ", cond, " according to ", "<a href='https://en.wikipedia.org/wiki/Body_mass_index#Categories'>", "Wikipedia", "</a>"
+           )
+  })
+  
+  output$plot <- renderPlot({
+    bmi = round(input$mass/(input$height/100)^2, 1)
+    if (bmi>40) {bmi=40}
+    barplot(dat, horiz = TRUE, yaxt="n", xlab = "BMI", main="Your BMI", col=c("darkred", "red", "orange", "green", "orange", "red", "darkred", "brown"))
+    lines(x=c(bmi, bmi), y=c(0,1.2), col="blue", lwd=4)
+  })
+  
+  
+})
+```
